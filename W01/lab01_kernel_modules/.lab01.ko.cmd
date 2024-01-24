@@ -1,0 +1,1 @@
+cmd_/home/vboxuser/systems_programming/lab01/lab01.ko := ld -r  -m elf_x86_64 -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/vboxuser/systems_programming/lab01/lab01.ko /home/vboxuser/systems_programming/lab01/lab01.o /home/vboxuser/systems_programming/lab01/lab01.mod.o;  true

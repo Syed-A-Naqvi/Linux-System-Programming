@@ -1,0 +1,2 @@
+/home/vboxuser/systems_programming/l02_exercise/hello_kernel.o
+

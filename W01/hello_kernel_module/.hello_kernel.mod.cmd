@@ -1,0 +1,1 @@
+cmd_/home/vboxuser/systems_programming/l02_exercise/hello_kernel.mod := { echo  /home/vboxuser/systems_programming/l02_exercise/hello_kernel.o;  echo; } > /home/vboxuser/systems_programming/l02_exercise/hello_kernel.mod

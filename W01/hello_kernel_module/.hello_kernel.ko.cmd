@@ -1,0 +1,1 @@
+cmd_/home/vboxuser/systems_programming/l02_exercise/hello_kernel.ko := ld -r  -m elf_x86_64 -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/vboxuser/systems_programming/l02_exercise/hello_kernel.ko /home/vboxuser/systems_programming/l02_exercise/hello_kernel.o /home/vboxuser/systems_programming/l02_exercise/hello_kernel.mod.o;  true
