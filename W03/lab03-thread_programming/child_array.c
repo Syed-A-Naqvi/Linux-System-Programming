@@ -54,10 +54,10 @@ int main(int argc, char const *argv[])
     // storing desired array size from user
     int size = atoi(argv[1]);
 
-    // here we are creating a thread, it will use a pointer to tid (&tid) to update the threadid stored in tid
+    // here we are creating a thread, we pass it the address (pointer) to tid where the threadID will be stored
     // first NULL is because we are not passing any thread attributes
     // we then pass a pointer to the function that the child thread will execute &create_array
-    // the last argument is the desired array size that our child thread will allocate
+    // last argument is what will be passed to thread function, in this case it is the array size
     pthread_create(&tid, NULL, &create_array, &size);
 
     // this will store the return value of the child thread
