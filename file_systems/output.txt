@@ -1,1 +1,2 @@
-Data: Ontario Tech University.
+Ontario Tech University.
+A cool school.
