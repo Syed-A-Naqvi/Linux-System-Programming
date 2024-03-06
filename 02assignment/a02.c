@@ -8,30 +8,38 @@
 #include<stdarg.h>
 
 
-
-
-
 #define MAX_LINE_LENGTH 1024
 #define PATH_MAX 4096
-#define LOG_FILE "./dirlogs.txt"
+#define LOG_FILE "./logs.txt"
 
 // will append a string describing an event to a log file
 void logEvent(const char *format, ...) { 
 
     va_list args;
+
+    // opening log file in append mode
+    FILE* file = fopen(LOG_FILE, "a+");
+    if(file == NULL){
+        perror("Error opening log file.\n");
+        return;
+    }
+
+    // initializing the args variable to point to the first of the variable arguments 
     va_start(args, format);
-    vprintf(format, args);
+    // using the variable arguments and the passed format string to write to log file
+    vfprintf(file, format, args);
+    // cleaning up variable argument list
     va_end(args);
 
+    // reinitializing args to point to the first of the variable arguments
+    va_start(args, format);
+    // using variable arguments and formatted string to output to the console
+    vprintf(format, args);
+    // cleaning up variable argument again
+    va_end(args);
 
-    FILE* file = fopen(LOG_FILE, "w+");
-
-    if(file == NULL){
-        perror("error opening log file.\n");
-    }
-    else{
-        fprintf(file, "%s", event);
-        fclose(file);
+    // closing file
+    fclose(file);
 
 }
 
@@ -55,7 +63,7 @@ int makeDirs(char* fname){
         // logging successsful file open
         logEvent("Successfully opened record file %s\n.", fname);
 
-        // will store working dir
+        // store working dir path
         char workingdr[PATH_MAX];
 
         // creating the user and admin folders to which more users will be added
@@ -64,7 +72,7 @@ int makeDirs(char* fname){
             return -1;
         }
         else {
-            getcwd(workdingdr);
+            getcwd(workingdr, sizeof(workingdr));
             logEvent("Successfully created root directory in  %s\n.", fname);
             logEvent("Successfully created user directory in  %s\n.", fname);
         }
