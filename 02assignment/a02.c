@@ -42,6 +42,7 @@ void logEvent(const char *format, ...) {
 
 }
 
+// returns pointer to allocated memory in which source string is copied
 char* allocateAndCopy(const char *source){
     char *dest = malloc(sizeof(char)*strlen(source)+1);
     if(dest == NULL){
@@ -52,6 +53,83 @@ char* allocateAndCopy(const char *source){
     }
     return dest;
 }
+
+// returns 1 if directory at path exists, 0 else
+int dirExists(const char *path){
+    DIR *dir = opendir(path);
+    if (dir){
+        logEvent("directory at path %s already exists.\n", path);
+        return 1;
+    }
+    else{
+        logEvent("directory at path %s does not exist.\n", path);
+        return 0;
+    }
+    
+}
+
+// accepts array of directories part of a path and the index up to which the path needs to be created
+int makeDirs(const char **dirs, int idx){
+    
+    // getting length of path
+    int pathLen = 0;
+    char company[] = "./SiliconConsulting";
+    pathLen += strlen(company) + 1;
+    for (int i = 0; i <= idx; i++){
+        pathLen += strlen(dirs[i]) + 1;
+    }
+    pathLen++;
+    
+    // creating path string
+    char *path = malloc(pathLen);
+    memset(path, 0, pathLen);
+    strcat(path, company);
+    for (int i = 0; i <= idx; i++){
+        strcat(path, "/");
+        strcat(path, dirs[i]);
+    }
+    
+    // creating company parent folder
+    if(!dirExists(company)){
+        if(mkdir(company, 0777) == 0){
+            logEvent("Company directory created!\n");
+        }
+    }
+
+    // creating internal directory structure based on the current path
+    if(!dirExists(path)){
+
+        switch (idx){
+            case 0:
+                if(mkdir(path, 0777) == 0){
+                    if (strcmp(dirs[idx],"admin") == 0){
+                        logEvent("admin root directory created!\n");                    
+                    }
+                    else{      
+                        logEvent("user root directory created!\n");
+                    }
+                }
+                break;
+
+            case 1:
+                if(mkdir(path, 0777) == 0){
+                    logEvent("%s user directory created!\n", dirs[idx]);
+                }
+                break;
+
+            case 2:
+                if(mkdir(path, 0777) == 0){
+                    logEvent("Home directory for %s created!\n", dirs[1]);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+    
+}
+
 
 // will read file line-by-line and create a directory structure for each line
 int createDirectories(char* fname){
@@ -71,52 +149,48 @@ int createDirectories(char* fname){
         char pathBuffer[PATH_MAX];
         char fileName[MAX_FILENAME];
 
+        // extracting item names from each line and then creating all items line-by-line
         while (fgets(pathBuffer, PATH_MAX, file) != NULL){
             
-            int fIndx = 0;
+            int idx = 0;
             int comma = 0;
-            char *usertype, *username, *home, *profile;
+
+            //path array legend:
+                // 0 -> usertype
+                // 1 -> username
+                // 2 -> home
+                // 3 -> profile                
+            char *path[4];
             
             for(int i = 0; (pathBuffer[i] != '\n') && (pathBuffer[i] != '\0'); i++){
                 
                 char c = pathBuffer[i];
 
                 if(c != ','){
-                    fileName[fIndx] = c;
-                    fIndx++;
+                    fileName[idx] = c;
+                    idx++;
                 }
                 else{
                     comma++;
-                    fileName[fIndx] = '\0';
-
-                    switch (comma){
-                        case 1:
-                            usertype = allocateAndCopy(fileName);
-                            break;
-                        case 2:
-                            username = allocateAndCopy(fileName);
-                            break;
-                        case 3:
-                            home = allocateAndCopy(fileName);
-                            break;
-                        case 4:
-                            profile = allocateAndCopy(fileName);   
-                            break;
-                        default:
-                            break;
-                    }
+                    fileName[idx] = '\0';
+                    
+                    path[comma-1] = allocateAndCopy(fileName);
 
                     memset(fileName,0, MAX_FILENAME);
-                    fIndx = 0;                     
+                    idx = 0;                     
                 }
 
             }
+            // creating directory structure
+            for (size_t i = 0; i < 3; i++){
+                makeDirs((const char **)path, i);
+            }
             
-            logEvent("usertype = %s, username = %s, home = %s, profile = %s\n",usertype,username,home,profile);
-            free(usertype);
-            free(username);
-            free(home);
-            free(profile);
+
+            for (int i = 0; i < 4; i++){
+                free(path[i]);
+            }
+            
         }
 
     }
