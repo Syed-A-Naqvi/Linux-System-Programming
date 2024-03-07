@@ -1,18 +1,17 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include<string.h>
 #include<sys/stat.h>
 #include<sys/types.h>
 #include<dirent.h>
-#include<limits.h>
 #include<unistd.h>
 #include<stdarg.h>
 
-
-#define MAX_LINE_LENGTH 1024
 #define PATH_MAX 4096
+#define MAX_FILENAME 256
 #define LOG_FILE "./logs.txt"
 
-// will append a string describing an event to a log file
+// will append a string describing an event to a log file as well as display to console
 void logEvent(const char *format, ...) { 
 
     va_list args;
@@ -43,53 +42,90 @@ void logEvent(const char *format, ...) {
 
 }
 
+char* allocateAndCopy(const char *source){
+    char *dest = malloc(sizeof(char)*strlen(source)+1);
+    if(dest == NULL){
+        logEvent("Malloc for string '%s' failed.\n", source);
+    }
+    else{
+        strcpy(dest, source);
+    }
+    return dest;
+}
+
 // will read file line-by-line and create a directory structure for each line
-int makeDirs(char* fname){
+int createDirectories(char* fname){
 
-    // pointer to the file to be read from
-    FILE* file = fopen(fname, "r");
-
-    // will store each line for processing
-    char lineBuffer[MAX_LINE_LENGTH];
-
-    // output error in the case a file could not be read
+    logEvent("Opening directory structure file at path: %s ...\n", fname);
+    FILE *file = fopen(fname, "r");
+    
     if(file == NULL){
-        // writing error log 
-        logEvent("Error opening record file %s\n.", fname);
+        logEvent("Error opening file. Aborting...\n");
         return -1;
     }
     else{
+        logEvent("Successfully opened file.\n");
+        logEvent("Reading file ...\n");
         
-        // logging successsful file open
-        logEvent("Successfully opened record file %s\n.", fname);
+        // capable of storing the longest possible name for a file
+        char pathBuffer[PATH_MAX];
+        char fileName[MAX_FILENAME];
 
-        // store working dir path
-        char workingdr[PATH_MAX];
+        while (fgets(pathBuffer, PATH_MAX, file) != NULL){
+            
+            int fIndx = 0;
+            int comma = 0;
+            char *usertype, *username, *home, *profile;
+            
+            for(int i = 0; (pathBuffer[i] != '\n') && (pathBuffer[i] != '\0'); i++){
+                
+                char c = pathBuffer[i];
 
-        // creating the user and admin folders to which more users will be added
-        if((mkdir("./user",0700) == -1) || (mkdir("./admin",0700) == -1)){
-            logEvent("Error creating user or root directory.\n");
-            return -1;
-        }
-        else {
-            getcwd(workingdr, sizeof(workingdr));
-            logEvent("Successfully created root directory in  %s\n.", fname);
-            logEvent("Successfully created user directory in  %s\n.", fname);
+                if(c != ','){
+                    fileName[fIndx] = c;
+                    fIndx++;
+                }
+                else{
+                    comma++;
+                    fileName[fIndx] = '\0';
+
+                    switch (comma){
+                        case 1:
+                            usertype = allocateAndCopy(fileName);
+                            break;
+                        case 2:
+                            username = allocateAndCopy(fileName);
+                            break;
+                        case 3:
+                            home = allocateAndCopy(fileName);
+                            break;
+                        case 4:
+                            profile = allocateAndCopy(fileName);   
+                            break;
+                        default:
+                            break;
+                    }
+
+                    memset(fileName,0, MAX_FILENAME);
+                    fIndx = 0;                     
+                }
+
+            }
+            
+            logEvent("usertype = %s, username = %s, home = %s, profile = %s\n",usertype,username,home,profile);
+            free(usertype);
+            free(username);
+            free(home);
+            free(profile);
         }
 
-        while(fgets(lineBuffer, sizeof(lineBuffer), file)){
-            // for (int i = 1; i < strlen(lineBuffer); i++)
-            // {
-            //     /* code */
-            // }
-            printf("line = %sstrlen(line) = %ld\n", lineBuffer, strlen(lineBuffer));
-        }
     }
+
 }
 
 int main(int argc, char const *argv[])
 {
     char recordFile[] = "./dirs.txt";
-    makeDirs(recordFile);
+    createDirectories(recordFile);
     return 0;
 }
