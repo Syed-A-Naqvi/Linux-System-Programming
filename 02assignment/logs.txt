@@ -1,1 +1,31 @@
 
+Opening directory structure file at path: ./dirs.txt ...
+Successfully opened file.
+Reading file and creating directories ...
+
+Company directory created!
+
+admin root directory created!
+
+steve user directory created!
+Home directory for steve created!
+steve profile text file created!
+Permission for file at ./SiliconConsulting/admin/steve/home/profile.txt set to read only!
+
+bill user directory created!
+Home directory for bill created!
+bill profile text file created!
+Permission for file at ./SiliconConsulting/admin/bill/home/profile.txt set to read only!
+
+user root directory created!
+
+elon user directory created!
+Home directory for elon created!
+elon profile text file created!
+Permission for file at ./SiliconConsulting/user/elon/home/profile.txt set to read only!
+
+jeff user directory created!
+Home directory for jeff created!
+jeff profile text file created!
+Permission for file at ./SiliconConsulting/user/jeff/home/profile.txt set to read only!
+

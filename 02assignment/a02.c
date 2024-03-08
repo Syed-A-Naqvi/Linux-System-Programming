@@ -6,12 +6,14 @@
 #include<dirent.h>
 #include<unistd.h>
 #include<stdarg.h>
+#include<time.h>
+
 
 #define PATH_MAX 4096
 #define MAX_FILENAME 256
 #define LOG_FILE "./logs.txt"
 
-// will append a string describing an event to a log file as well as display to console
+// appending events to a log file as well as displaying to console
 void logEvent(const char *format, ...) { 
 
     va_list args;
@@ -42,7 +44,7 @@ void logEvent(const char *format, ...) {
 
 }
 
-// returns pointer to allocated memory in which source string is copied
+// returns pointer to dynamically allocated memory containing source string
 char* allocateAndCopy(const char *source){
     char *dest = malloc(sizeof(char)*strlen(source)+1);
     if(dest == NULL){
@@ -58,19 +60,70 @@ char* allocateAndCopy(const char *source){
 int dirExists(const char *path){
     DIR *dir = opendir(path);
     if (dir){
-        logEvent("directory at path %s already exists.\n", path);
+        closedir(dir);
         return 1;
     }
     else{
-        logEvent("directory at path %s does not exist.\n", path);
         return 0;
     }
     
 }
 
-// accepts array of directories part of a path and the index up to which the path needs to be created
-int makeDirs(const char **dirs, int idx){
+// creating profile.txt for a path for usrnm, appending timestamp, setting permissions
+int makeProfile(const char* path, const char* usrnm){
     
+    // creating profile.txt for usrnm 
+    FILE* profile = fopen(path, "w+");
+    if(profile == NULL){
+        logEvent("Error creating %s profile text file.\n", usrnm);
+    }
+    else{
+        logEvent("%s profile text file created!\n", usrnm);
+    }
+
+    // getting current time 
+    char timestamp[100];
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    strftime(timestamp, sizeof(timestamp), "%a %b %d %H:%M:%S %Y", t);
+
+    // creating string to write to file
+    int stringLength = sizeof(usrnm)+sizeof(" profile created on ")+sizeof(timestamp);
+    char *info = malloc(stringLength);
+    memset(info, 0, stringLength);
+    strcat(info, usrnm);
+    strcat(info, " profile created on ");
+    strcat(info, timestamp);
+
+    //writing string to profile.txt
+    fprintf(profile, "%s\n", info);
+
+    // closing file
+    fclose(profile);
+
+    // setting permissions to read-only for profile.txt for all users
+    if(chmod(path, 0444) == 0){
+        logEvent("Permission for file at %s set to read only!\n\n", path);
+    }
+    else{
+        logEvent("Error setting permissions for file at %s.", path);
+    }
+
+    // freeing dynamic variable
+    free(info);
+
+
+}
+
+// accepts a list of directories and index of the directory we are considering
+int makeItems(const char **dirs, int idx){
+    
+    //dirs array legend:
+        // 0 -> usertype
+        // 1 -> username
+        // 2 -> home
+        // 3 -> profile
+
     // getting length of path
     int pathLen = 0;
     char company[] = "./SiliconConsulting";
@@ -92,7 +145,7 @@ int makeDirs(const char **dirs, int idx){
     // creating company parent folder
     if(!dirExists(company)){
         if(mkdir(company, 0777) == 0){
-            logEvent("Company directory created!\n");
+            logEvent("Company directory created!\n\n");
         }
     }
 
@@ -101,36 +154,56 @@ int makeDirs(const char **dirs, int idx){
 
         switch (idx){
             case 0:
+                // creating either admin or user root directory
                 if(mkdir(path, 0777) == 0){
                     if (strcmp(dirs[idx],"admin") == 0){
-                        logEvent("admin root directory created!\n");                    
+                        logEvent("admin root directory created!\n\n");                    
                     }
                     else{      
-                        logEvent("user root directory created!\n");
+                        logEvent("user root directory created!\n\n");
                     }
                 }
                 break;
 
             case 1:
+                // creating user directory
                 if(mkdir(path, 0777) == 0){
                     logEvent("%s user directory created!\n", dirs[idx]);
                 }
                 break;
 
             case 2:
+                // creating home directory for specified user
                 if(mkdir(path, 0777) == 0){
                     logEvent("Home directory for %s created!\n", dirs[1]);
                 }
+
+                // creating path of profile.txt in home folder of current user
+                char *newpath = realloc(path, strlen(path) + sizeof("/profile.txt"));
+                if (newpath == NULL){
+                    logEvent("Could not resize path to include /profile.txt.\n");
+                }
+                else{
+                    path = newpath;
+                    strcat(path,"/profile.txt");
+                    makeProfile(path, dirs[1]);
+                }                
                 break;
 
             default:
                 break;
         }
     }
+
+    // freeing dynamically allocated variable
+    free(path);
     
 }
 
 
+
+// MAIN FUNCTION
+// RESULTS IN CALLS TO ALL OTHER FUNCTIONS
 // will read file line-by-line and create a directory structure for each line
 int createDirectories(char* fname){
 
@@ -143,11 +216,12 @@ int createDirectories(char* fname){
     }
     else{
         logEvent("Successfully opened file.\n");
-        logEvent("Reading file ...\n");
         
         // capable of storing the longest possible name for a file
         char pathBuffer[PATH_MAX];
         char fileName[MAX_FILENAME];
+
+        logEvent("Reading file and creating directories ...\n\n");
 
         // extracting item names from each line and then creating all items line-by-line
         while (fgets(pathBuffer, PATH_MAX, file) != NULL){
@@ -162,6 +236,7 @@ int createDirectories(char* fname){
                 // 3 -> profile                
             char *path[4];
             
+            // following loop uses the number of commas encountered to extract items of current path
             for(int i = 0; (pathBuffer[i] != '\n') && (pathBuffer[i] != '\0'); i++){
                 
                 char c = pathBuffer[i];
@@ -181,17 +256,22 @@ int createDirectories(char* fname){
                 }
 
             }
-            // creating directory structure
+            // creating all items part of the directory structure defined by current line read
             for (size_t i = 0; i < 3; i++){
-                makeDirs((const char **)path, i);
+                // will make each directory defined by first three comma-seperated values
+                // automatically creates profile.txt after creating home dir for a user
+                makeItems((const char **)path, i);
             }
             
-
+            // freeing all dynamically allocated strings storing items extracted from current line
             for (int i = 0; i < 4; i++){
                 free(path[i]);
             }
             
         }
+
+        // closing file after all directory structures created
+        fclose(file);
 
     }
 
@@ -199,7 +279,11 @@ int createDirectories(char* fname){
 
 int main(int argc, char const *argv[])
 {
+    // this is the path of the file that contains directory structures
     char recordFile[] = "./dirs.txt";
+
+    // creating directory structures
     createDirectories(recordFile);
+
     return 0;
 }
