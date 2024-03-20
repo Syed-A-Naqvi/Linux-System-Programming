@@ -3,14 +3,19 @@
 #include<sys/socket.h>
 #include<sys/types.h>
 #include<arpa/inet.h>
+#include<string.h>
+
 
 int main(int argc, char const *argv[])
 {
+
+// ------------------------INITIALIZING SOCKET------------------------    
 
     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket < 0)
     {
         printf("Error creating socket.\n");
+        return -1;
     }
     else
     {
@@ -28,24 +33,47 @@ int main(int argc, char const *argv[])
     if (connectionResult < 0)
     {
         printf("Error establishing connection.\n");
+        return -1;
     }
     else
     {
         printf("Connection established.\n");
         printf("Server IP: %s\n", inet_ntoa(svrAddress.sin_addr));
-        printf("Server port: %d\n", ntohs(svrAddress.sin_port)); 
+        printf("Server port: %d\n\n", ntohs(svrAddress.sin_port)); 
     }
 
-    char RxBuffer[128] = {};
-    char TxBuffer[128] = "This is the client's message.";
 
-    int bytesSent = send(clientSocket, TxBuffer, sizeof(TxBuffer), 0);
-    printf("Bytes sent to server: %d\n", bytesSent);
-    printf("Message sent to server --> %s\n", TxBuffer);  
-    
-    int bytesRead = recv(clientSocket, RxBuffer, sizeof(RxBuffer), 0);
-    printf("Bytes recieved from server: %d\n", bytesRead);
-    printf("Message recieved from server --> %s\n\n", RxBuffer);
+// ------------------------CLIENT-SERVER COMMUNICATION------------------------
+
+    char RxBuffer[128] = {};
+    char TxBuffer[128] = {};
+
+    while (1)
+    {
+        printf("Enter temperature in fahrenheit (enter \"stop\" to kill client and server): ");
+        fgets(RxBuffer, sizeof(RxBuffer), stdin);
+        RxBuffer[strcspn(RxBuffer,"\n")] = 0;
+
+        if(strcmp(RxBuffer, "stop") == 0){
+            sprintf(TxBuffer, "%s", "stop");
+            int bytesSent = send(clientSocket, TxBuffer, sizeof(TxBuffer), 0);
+            printf("Kill command entered ... Terminating program ...\n");
+            break;
+        }
+
+        printf("Sending temperature %s°F in Fahrenheit to server for conversion to Celsius...\n", RxBuffer);
+
+        sprintf(TxBuffer, "%s", RxBuffer);
+        int bytesSent = send(clientSocket, TxBuffer, sizeof(TxBuffer), 0);
+        memset(RxBuffer, sizeof(RxBuffer), 0);
+
+        int bytesRead = recv(clientSocket, RxBuffer, sizeof(RxBuffer), 0);
+        printf("Temperature in Celsius recieved from server after conversion -> %s°C\n\n", RxBuffer);
+
+        memset(RxBuffer, 0, sizeof(RxBuffer));
+        memset(TxBuffer, 0, sizeof(TxBuffer));
+
+    }
 
     return 0;
 }

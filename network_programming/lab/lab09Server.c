@@ -3,14 +3,22 @@
 #include<sys/socket.h>
 #include<sys/types.h>
 #include<arpa/inet.h>
+#include<string.h>
+#include<math.h>
+
+
 
 int main(int argc, char const *argv[])
 {
+
+// ------------------------INITIALIZING LISTENING SOCKET------------------------
+
     // creating a TCP/IP socket for ipv4 communications
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0)
     {
         printf("Error creating socket.\n");
+        return -1;
     }
     else
     {
@@ -30,6 +38,7 @@ int main(int argc, char const *argv[])
     if (bindResult < -1)
     {
         printf("Error binding socket.\n");
+        return -1;
     }
     else
     {
@@ -41,7 +50,8 @@ int main(int argc, char const *argv[])
     int listenResult = listen(serverSocket, -1);
     if (listenResult < 0)
     {
-        printf("Error listening to socket.\n");
+        printf("Error listening on socket.\n");
+        return -1;
     }
     else
     {
@@ -49,12 +59,16 @@ int main(int argc, char const *argv[])
     }
     
     
+    // client address information will be stored here
     struct sockaddr_in cltAddress;
     socklen_t lenCltAddress = sizeof(cltAddress);
+
+    // accepting the next client connection
     int clientSocket = accept(serverSocket, (struct sockaddr *) &cltAddress, &lenCltAddress);
     if (clientSocket < 0)
     {
         printf("Error accepting connection.\n");
+        return -1;
     }
     else
     {
@@ -64,17 +78,37 @@ int main(int argc, char const *argv[])
         printf("Connection established!\n\n");
     }
 
+
+// ------------------------CLIENT-SERVER COMMUNICATION------------------------
+
+    // message buffers
     char RxBuffer[128] = {};
-    char TxBuffer[128] = "This mesage is being sent.";
+    char TxBuffer[128] = {};
 
-    int bytesRead = recv(clientSocket, RxBuffer, sizeof(RxBuffer), 0);
-    printf("Bytes recieved from client: %d\n", bytesRead);
-    printf("Message recieved from client --> %s\n\n", RxBuffer);
+    while (1)
+    {
+        int bytesRead = recv(clientSocket, RxBuffer, sizeof(RxBuffer), 0);
 
-    int bytesSent = send(clientSocket, TxBuffer, sizeof(TxBuffer), 0);
-    printf("Bytes sent to client: %d\n", bytesSent);
-    printf("Message sent to client --> %s\n", TxBuffer);
+        if(strcmp(RxBuffer, "stop") == 0){
+            printf("Message recieved from client --> %s\n", RxBuffer);
+            printf("Kill command recieved ... Terminating server ...\n");
+            break;
+        }
 
+        float farTemp = atof(RxBuffer);
+        printf("Temperature in Fahrenheit recieved from client -> %.2f°F\n", farTemp);
+
+        printf("Converting to Celsius...\n");
+        float celTemp = (farTemp - 32) * (5.0/9.0);
+
+        sprintf(TxBuffer, "%.2f", celTemp);
+        int bytesSent = send(clientSocket, TxBuffer, sizeof(TxBuffer), 0);
+        printf("Temperature in Celsius sent to client -> %s°C\n\n", TxBuffer);
+
+        memset(RxBuffer, 0, sizeof(RxBuffer));
+        memset(TxBuffer, 0, sizeof(TxBuffer));
+
+    }
 
 
     return 0;
