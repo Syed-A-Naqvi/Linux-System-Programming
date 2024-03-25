@@ -9,7 +9,7 @@
 int main(int argc, char const *argv[])
 {
 
-// ------------------------INITIALIZING SOCKET------------------------    
+    // ------------------------INITIALIZING SOCKET------------------------    
 
     int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket < 0)
@@ -19,7 +19,7 @@ int main(int argc, char const *argv[])
     }
     else
     {
-        printf("Client socket initialized!\n");
+        printf("Client socket initialized!\n\n");
     }
 
     // server endpoint
@@ -43,16 +43,23 @@ int main(int argc, char const *argv[])
     }
 
 
-// ------------------------CLIENT-SERVER COMMUNICATION------------------------
+    // ------------------------CLIENT-SERVER COMMUNICATION------------------------
 
     char RxBuffer[128] = {};
     char TxBuffer[128] = {};
-
-    while (1)
+    if (argv[1] != NULL)
     {
-        printf("Enter temperature in fahrenheit (enter \"stop\" to kill client and server): ");
-        fgets(RxBuffer, sizeof(RxBuffer), stdin);
-        RxBuffer[strcspn(RxBuffer,"\n")] = 0;
+        strcpy(RxBuffer, argv[1]); // initial temperature command-line argument funcationality shown in lab output requirement
+    }
+    
+    for(int i = 0; 1; i++)
+    {
+        if(RxBuffer[0] == '\0')
+        {
+            printf("Enter temperature in fahrenheit (enter \"stop\" to kill client and server): ");
+            fgets(RxBuffer, sizeof(RxBuffer), stdin);
+            RxBuffer[strcspn(RxBuffer,"\n")] = 0;
+        }
 
         if(strcmp(RxBuffer, "stop") == 0){
             sprintf(TxBuffer, "%s", "stop");

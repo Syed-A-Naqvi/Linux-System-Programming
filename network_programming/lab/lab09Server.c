@@ -95,10 +95,10 @@ int main(int argc, char const *argv[])
             break;
         }
 
-        float farTemp = atof(RxBuffer);
-        printf("Temperature in Fahrenheit recieved from client -> %.2f°F\n", farTemp);
+        printf("Temperature in Fahrenheit recieved from client -> %s°F\n", RxBuffer);
 
         printf("Converting to Celsius...\n");
+        float farTemp = atof(RxBuffer);
         float celTemp = (farTemp - 32) * (5.0/9.0);
 
         sprintf(TxBuffer, "%.2f", celTemp);
