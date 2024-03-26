@@ -4,7 +4,60 @@
 #include<sys/socket.h>
 #include<arpa/inet.h>
 #include<string.h>
+#include<pthread.h>
 
+// THREAD FUNCTION
+void* manageClient(void* arg)
+{
+    // getting server-side client socket
+    int clientSocket = *(int *)arg;
+
+    // communicating with client
+    char RxBuffer[1024] = {};
+    char TxBuffer[1024] = {};
+
+    while(1)
+    {
+        // recieving messages from client
+        int rcvd = recv(clientSocket, RxBuffer, sizeof(RxBuffer),0);
+        if (rcvd == -1)
+        {
+            printf("Error recieving message from client.\n");
+        }
+        else if (rcvd == 0)
+        {
+            printf("\nClient has been disconnected.\n\n");
+            break;
+        }
+        else
+        {
+            RxBuffer[strcspn(RxBuffer, "\n")] = '\0';
+            printf("Message recieved from client -> \"%s\"\n", RxBuffer);
+        }
+
+        // creating acknowledgment message
+        sprintf(TxBuffer, "Acknowledging message: \"%s\"\n", RxBuffer);
+
+        // sending message acknowledgement
+        int sent = send(clientSocket, TxBuffer, strlen(TxBuffer)+1,0);
+        if (sent == -1)
+        {
+            printf("Error sending message acknowledgement.\n");
+        }
+        else
+        {
+            printf("Acknowledgement sent.\n");
+        }
+
+        memset(RxBuffer, '\0', sizeof(RxBuffer));
+        memset(TxBuffer, '\0', sizeof(TxBuffer));
+        
+    }
+
+    close(clientSocket);
+    pthread_exit(NULL);
+
+}
 
 int main(int argc, char const *argv[])
 {
@@ -51,64 +104,35 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    // ACCEPTING INCOMING CONNECTION, CREATING NEW SOCKET AND STORING CLIENT-SIDE SOCKET ADDRESS //
-    struct sockaddr_in clientAddress;
-    socklen_t clientAddressLen = sizeof(clientAddress);
-    int connectionSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientAddress);
-    if (connectionSocket == -1)
-    {
-        printf("Unable to accept connection.\n");        
-    }
-    else
-    {
-        printf("Connection accepted!\n");        
-    }
-
-
-    // COMMUNICATING WITH CLIENT //
-    char RxBuffer[128] = {};
-    char TxBuffer[128] = {};
-
     while (1)
     {
-        // RECIEVING FROM CLIENT //
-        int bytesRCVD = recv(connectionSocket, RxBuffer, sizeof(RxBuffer), 0);
-        if (bytesRCVD == -1)
-        {
-            printf("Error recieving message from client.\n");
-        }
-        else
-        {   
-            RxBuffer[strcspn(RxBuffer, '\n')] = '\0';
-            printf("Message of %d bytes recieved from client -> \"%s\"\n", bytesRCVD, RxBuffer);
-        }
 
-        // CONSTRUCTING TRANSMISSION MESSAGE //
-        sprintf(TxBuffer, "Acknowledgement of message: \"%s\"", RxBuffer);
-
-        // SENDING TO CLIENT //
-        int bytesSNT = recv(connectionSocket, TxBuffer, sizeof(TxBuffer), 0);
-        if (bytesSNT == -1)
+        // ACCEPTING INCOMING CONNECTION, CREATING NEW SOCKET AND STORING CLIENT-SIDE SOCKET ADDRESS //
+        struct sockaddr_in clientAddress;
+        socklen_t clientAddressLen = sizeof(clientAddress);
+        int clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientAddressLen);
+        if (clientSocket == -1)
         {
-            printf("Error sending acknowledgement to client.\n");
+            printf("Unable to accept connection.\n");        
         }
         else
         {
-            printf("Sending %d byte acknowledgement to client -> \"%s\"\n", bytesSNT, TxBuffer);
+            printf("\nConnection accepted!\n");
+            printf("Client IP: %s\n", inet_ntoa(clientAddress.sin_addr));        
+            printf("Client Port Number: %d\n\n", (clientAddress.sin_port));
         }
 
-        if(strcmp(RxBuffer,"stop") == 0){
-            printf("Kill command recieved. Terminating server...\n");
-            break;
-        }
+        pthread_t tid;
 
-        memset(RxBuffer, '\0', sizeof(RxBuffer));
-        memset(TxBuffer, '\0', sizeof(TxBuffer));
+        // creating thread to service client connection
+        if(pthread_create(&tid, NULL, manageClient, (void *)&clientSocket) != 0)
+        {
+            printf("Error creating thread for client.\n");
+        }
 
     }
         
     close(serverSocket);
-    close(connectionSocket);
 
     return 0;
 }
