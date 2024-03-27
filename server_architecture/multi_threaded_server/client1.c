@@ -52,8 +52,18 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < 11; i++)
     {   
 
-        sleep(1);
-        sprintf(TxBuffer, "(client 1) message %d", i);
+        struct myStruct 
+        {
+            int num;
+            char message[128];
+        };
+
+        struct myStruct mystr;
+        mystr.num = i;
+        strcpy(mystr.message, "(client 1) message");
+        
+
+        sprintf(TxBuffer, "%s %d", mystr.message,mystr.num);
         int bytesSNT = send(connectionSocket, TxBuffer, strlen(TxBuffer)+1, 0);
         if (bytesSNT == -1)
         {
@@ -77,6 +87,8 @@ int main(int argc, char const *argv[])
         memset(RxBuffer, '\0', sizeof(RxBuffer));
         memset(TxBuffer, '\0', sizeof(TxBuffer));
         
+        sleep(1);        
+
     }
 
     close(connectionSocket);

@@ -57,7 +57,6 @@ int main(int argc, char const *argv[])
     for (int i = 11; i < 21; i++)
     {   
 
-        sleep(1);
         sprintf(TxBuffer, "(client 2) message %d", i);
         int bytesSNT = send(connectionSocket, TxBuffer, strlen(TxBuffer)+1, 0);
         if (bytesSNT == -1)
@@ -81,6 +80,8 @@ int main(int argc, char const *argv[])
 
         memset(RxBuffer, '\0', sizeof(RxBuffer));
         memset(TxBuffer, '\0', sizeof(TxBuffer));
+
+        sleep(1);
 
     }        
     
