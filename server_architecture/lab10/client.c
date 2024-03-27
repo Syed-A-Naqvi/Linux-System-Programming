@@ -37,26 +37,18 @@ int main(int argc, char const *argv[])
     }
     
 
-    char username[10] = {};
-    char password[10] = {};
+    char credentials[20] = {};
     char authentication[30] = {};
 
-    sprintf(username, "%s", argv[1]);
-    sprintf(password, "%s", argv[2]);
+    sprintf(credentials, "%s,%s", argv[1], argv[2]);
 
-    int sntBytes = send(clientSocket, username, strlen(username) + 1, 0);
-    if (sntBytes == -1)
-    {
-        printf("Error sending username to server. Terminating client...\n");
-        return -1;
-    }
-    int sntBytes = send(clientSocket, password, strlen(password) + 1, 0);
+    int sntBytes = send(clientSocket, credentials, strlen(credentials) + 1, 0);
     if (sntBytes == -1)
     {
         printf("Error sending password to server. Terminating client...\n");
         return -1;
     }
-    printf("Login Info sent to the server.\n");
+    printf("Login Info sent to server.\n");
     printf("Waiting for response...\n");
 
     int rcvdBytes = recv(clientSocket, authentication, sizeof(authentication), 0);
@@ -72,7 +64,7 @@ int main(int argc, char const *argv[])
     }
     else
     {
-        printf("Received from the server --> %s", authentication);
+        printf("Received from the server --> %s\n", authentication);
     }
 
     close(clientSocket); 

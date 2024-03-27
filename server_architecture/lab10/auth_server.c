@@ -8,7 +8,7 @@
 
 struct Login
 {
-    char userName[8];
+    char username[8];
     char password[8];
 };
 
@@ -27,25 +27,13 @@ void* authenticate(void* arg){
     int connectionSocket = *(int *)arg;
 
     // will store received credentials
-    char userName[8] = {};
-    char password[8] = {};
-    // receiving username
-    int rcvdBytes = recv(connectionSocket, userName, sizeof(userName), 0);
-    if (rcvdBytes == -1)
-    {
-        printf("Error receiving client username.\n");
-        return NULL;
-    }
-    else if (rcvdBytes == 0)
-    {
-        printf("Client closed connection.\n");
-        return NULL;
-    }
+    char credentials[20] = {};
+
     // receiving password
-    rcvdBytes = recv(connectionSocket, password, sizeof(password), 0);
+    int rcvdBytes = recv(connectionSocket, credentials, sizeof(credentials), 0);
     if (rcvdBytes == -1)
     {
-        printf("Error receiving client password.\n");
+        printf("Error receiving credentials.\n");
         return NULL;
     }
     else if (rcvdBytes == 0)
@@ -53,6 +41,10 @@ void* authenticate(void* arg){
         printf("Client closed connection.\n");
         return NULL;
     }
+
+    char * username = strtok(credentials, ",");
+    char * password = strtok(NULL, ",");
+
     printf("Client requesting authentication...\n");
 
     // authentication response
@@ -60,7 +52,7 @@ void* authenticate(void* arg){
 
     for (int i = 0; i < 5; i++)
     {
-        if(strcmp(userName, logins[i].userName) == 0)
+        if(strcmp(username, logins[i].username) == 0)
         {
             if (strcmp(password, logins[i].password) == 0)
             {
@@ -78,7 +70,7 @@ void* authenticate(void* arg){
     }
     else
     {
-        printf("Authentication response sent...\n");
+        printf("Authentication response sent...\n\n");
     }
 
     close(connectionSocket);
@@ -123,7 +115,7 @@ int main(int argc, char const *argv[])
     }
     else
     {
-        printf("Listening on socket...\n");
+        printf("Listening on socket...\n\n");
     }
 
     while (1)
