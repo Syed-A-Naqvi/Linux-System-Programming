@@ -75,18 +75,11 @@ int main(int argc, char const *argv[])
     int inAttempts = 0;
     while (1)
     {   
-
-        if(inAttempts == MAX_ATTEMPTS){
-            printf("%d unnsuccessful attempts. Terminating client....\n\n", inAttempts);
-            close(connectionSocket);
-            return -1;
-        }
-
         printf("\nPlease enter your name: ");
         if (fgets(tx, 100*sizeof(char), stdin) == NULL)
         {
             inAttempts++;
-            printf("Nothing received form the command line, please try again. %d attempts remaining.\n", MAX_ATTEMPTS - inAttempts);
+            printf("Nothing received from the command line, please try again. %d attempts remaining.\n", MAX_ATTEMPTS - inAttempts);
         }
         else if (tx[0] == '\n')
         {
@@ -95,8 +88,15 @@ int main(int argc, char const *argv[])
         }
         else
         {   
-            tx[strlen(tx)-1] == 0;
+            tx[strlen(tx)-1] = 0;
+            printf("There should be no newline character after %s", tx);
             break;
+        }
+
+        if(inAttempts >= MAX_ATTEMPTS){
+            printf("%d unnsuccessful attempts. Terminating client....\n\n", inAttempts);
+            close(connectionSocket);
+            return -1;
         }
 
     }
@@ -116,6 +116,7 @@ int main(int argc, char const *argv[])
         }
     }
     
+    // MAIN COMMUNICATION
     while (1)
     {  
 
@@ -146,13 +147,6 @@ int main(int argc, char const *argv[])
         inAttempts = 0;
         while (1)
         {   
-
-            if(inAttempts == MAX_ATTEMPTS){
-                printf("%d unnsuccessful attempts. Terminating client....\n\n", inAttempts);
-                close(connectionSocket);
-                return -1;
-            }
-
             printf("\nPlease enter your choice: ");
             if (fgets(tx, 100*sizeof(char), stdin) == NULL)
             {
@@ -192,16 +186,22 @@ int main(int argc, char const *argv[])
                 printf("Please enter a valid choice. %d attempts remaining.\n", MAX_ATTEMPTS - inAttempts);
             }
 
+            if(inAttempts >= MAX_ATTEMPTS){
+                printf("%d unnsuccessful attempts. Terminating client....\n\n", inAttempts);
+                close(connectionSocket);
+                return -1;
+            }
+
         }        
 
         // SENDING CHOICE BACK TO SERVER
-        sbytes = send(connectionSocket, tx, sizeof(tx),0);
-        if (sbytes == -1)
-        {
-            printf("Error sending choice to server. Terminating client ...\n");
-            close(connectionSocket);
-            return -1;
-        }
+        // sbytes = send(connectionSocket, tx, sizeof(tx),0);
+        // if (sbytes == -1)
+        // {
+        //     printf("Error sending choice to server. Terminating client ...\n");
+        //     close(connectionSocket);
+        //     return -1;
+        // }
 
         // RECEIVING BENFIT INFORMATION FROM SERVER
         // rbytes = recv(connectionSocket, rx, sizeof(rx), 0);
@@ -228,14 +228,7 @@ int main(int argc, char const *argv[])
         // ASKING USER IF THEY NEED MORE INFORMATION
         inAttempts = 0;
         while (1)
-        {   
-
-            if(inAttempts == MAX_ATTEMPTS){
-                printf("%d unnsuccessful attempts. Terminating client....\n\n", inAttempts);
-                close(connectionSocket);
-                return -1;
-            }
-
+        {
             printf("\nDo you need any more information? (Yes = y, No = n): ");
             if (fgets(tx, 100*sizeof(char), stdin) == NULL)
             {
@@ -243,6 +236,7 @@ int main(int argc, char const *argv[])
                 printf("Nothing received from the command line, please try again. %d attempts remaining.\n", MAX_ATTEMPTS - inAttempts);
                 continue;
             }
+
             if (strlen(tx) > 2)
             {
                 inAttempts++;                    
@@ -262,16 +256,22 @@ int main(int argc, char const *argv[])
                 }
             }
 
+            if(inAttempts >= MAX_ATTEMPTS){
+                printf("%d unnsuccessful attempts. Terminating client....\n\n", inAttempts);
+                close(connectionSocket);
+                return -1;
+            }
+
         }   
 
         // SENDING RESPONSE TO SERVER AND TERMINATING IF RESPONSE WAS 'n'
-        sbytes = send(connectionSocket, tx, sizeof(tx),0);
-        if (sbytes == -1)
-        {
-            printf("Error sending choice to server. Terminating client ...\n");
-            close(connectionSocket);
-            return -1;
-        }
+        // sbytes = send(connectionSocket, tx, sizeof(tx),0);
+        // if (sbytes == -1)
+        // {
+        //     printf("Error sending choice to server. Terminating client ...\n");
+        //     close(connectionSocket);
+        //     return -1;
+        // }
 
         if(tx[0] == 'n'){
             close(connectionSocket);

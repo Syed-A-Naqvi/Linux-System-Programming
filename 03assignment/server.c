@@ -20,7 +20,7 @@ void* manageClient(void* arg){
     // TRANSMISSION AND RECEPTION BUFFERS
     char menu[1024] = {};
     char tx[1024] = {};
-    char rx[1024] = {};
+    char rx[100] = {};
 
     // SENDING WELCOME MESSAGE TO CLIENT //
     sprintf(tx, "%s","Welcome to Benefits Canada Server!");
@@ -31,7 +31,7 @@ void* manageClient(void* arg){
         printf("Cannot gurantee client connection. Closing Socket...\n");
         close(client->cltSocket);
         free(client);
-        return -1;
+        return (void*)1;
     }
 
     // RECEIVING CLIENT NAME AND CREATING MENU
@@ -43,14 +43,14 @@ void* manageClient(void* arg){
             printf("Cannot gurantee connection. Closing socket...\n");
             close(client->cltSocket);
             free(client);
-            return -1;
+            return (void*)1;
         }
         else if (rbytes == 0)
         {
             printf("Client has closed connection.\n");
             close(client->cltSocket);
             free(client);
-            return 0;
+            return (void*)1;
         }
         
     }
@@ -61,48 +61,76 @@ void* manageClient(void* arg){
     strncat(menu, "3. Registered Disability Savings Plan\n", sizeof(menu) - strlen(menu) - 1);
     strncat(menu, "4. War Veterans Allowance\n", sizeof(menu) - strlen(menu) - 1);
     strncat(menu, "5. Disability Tax Credit\n", sizeof(menu) - strlen(menu) - 1);
-    strncat(menu, "6. Canada Dental Benefits", sizeof(menu) - strlen(menu) - 1);
-    
-    // PROVIDING INFORMATION TO CLIENT AS LONG AS REQUIRED
-    while (1)
-    {    
-        // SENDING MENU TO CLIENT
-        sbyts = send(client->cltSocket, menu, strlen(menu)+1,0);
-        if (sbyts == -1)
-        {
-            printf("Error sending menu to client.\n");
-            printf("Cannot gurantee client connection. Closing Socket...\n");
-            close(client->cltSocket);
-            free(client);
-            return -1;
-        }
-    
-        // RECEIVING CLIENT BENEFITS OPTION
-        int rbytes = recv(client->cltSocket, rx, sizeof(rx), 0);
-        {
-            if (rbytes == -1)
-            {
-                printf("Error receiving benefits option from client.\n");
-                printf("Cannot gurantee connection. Closing socket...\n");
-                close(client->cltSocket);
-                free(client);
-                return -1;
-            }            
-        }
+    strncat(menu, "6. Canada Dental Benefits\n", sizeof(menu) - strlen(menu) - 1);
 
-        
+    printf("%s", menu);
+
+
+    // EXTRACTING AND STORING ALL BENEFITS DATA FROM FILE
+    // FILE *file = fopen("./Benefitrs_Canada.txt", "r");
+    // char* benefits[6] = {};
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     if(fgets(rx,sizeof(rx), file) == NULL){
+    //         printf("Error reading from benefits file. Closing client socket...\n");
+    //         close(client->cltSocket);
+    //         free(client);
+    //         return (void*)1;
+    //     }
+    //     rx[strlen(rx)-1] = 0;
+    //     benefits[i] = malloc(strlen(rx)+1);
+    //     sprintf(benefits[i], "%s", rx);
+    // }
+    // fclose(file);
+    // for (int i = 0; i < 6; i++)
+    // {
+    //     printf("%s\n",benefits[i]);
+    // }
     
+
+
+    // PROVIDING INFORMATION TO CLIENT AS LONG AS REQUIRED
+    // while (1)
+    // {    
+    //     // SENDING MENU TO CLIENT
+    //     sbyts = send(client->cltSocket, menu, strlen(menu)+1,0);
+    //     if (sbyts == -1)
+    //     {
+    //         printf("Error sending menu to client.\n");
+    //         printf("Cannot gurantee client connection. Closing Socket...\n");
+    //         close(client->cltSocket);
+    //         free(client);
+    //         return -1;
+    //     }
     
-    
-    
-    
-    }
+    //     // RECEIVING CLIENT BENEFITS OPTION
+    //     int rbytes = recv(client->cltSocket, rx, sizeof(rx), 0);
+    //     {
+    //         if (rbytes == -1)
+    //         {
+    //             printf("Error receiving benefits option from client.\n");
+    //             printf("Cannot gurantee connection. Closing socket...\n");
+    //             close(client->cltSocket);
+    //             free(client);
+    //             return -1;
+    //         }
+    //         else if (rbytes == 0)
+    //         {
+    //             printf("Client has closed connection.\n");
+    //             printf("Closing socket.\n");
+    //             close(client->cltSocket);
+    //             free(client);
+    //             return 0;
+    //         }           
+    //     }
+
+    // }
     
     // FREEING DYNAMICALLY ALLOCATED SPACE AND CLOSING ACTIVE CLIENT SOCKET
     close(client->cltSocket);
     free(client);
 
-    return 0;
+    return (void*)0;
 }
 
 int main(int argc, char const *argv[])
