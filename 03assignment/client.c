@@ -89,7 +89,6 @@ int main(int argc, char const *argv[])
         else
         {   
             tx[strlen(tx)-1] = 0;
-            printf("There should be no newline character after %s", tx);
             break;
         }
 
@@ -112,7 +111,7 @@ int main(int argc, char const *argv[])
         }
         else
         {
-            printf("Connection established.\n\n");
+            printf("Connection established.\n");
         }
     }
     
@@ -120,28 +119,29 @@ int main(int argc, char const *argv[])
     while (1)
     {  
 
-        // RECEIVING MENU FROM SERVER
-        // rbytes = recv(connectionSocket, rx, sizeof(rx), 0);
-        // {
-        //     if (rbytes == -1)
-        //     {
-        //         printf("Error receiving menu from server.\n");
-        //         printf("Can not gurantee connection. Terminating client...\n");
-        //         close(connectionSocket);
-        //         return 0;
-        //     }
-        //     else if (rbytes == 0)
-        //     {
-        //         printf("Server has closed connection.\n");
-        //         close(connectionSocket);
-        //         return 0;
-        //     }
-        //     else
-        //     {
-        //         printf("%s\n", rx);
-        //     }
+        printf("\n\n");
 
-        // } 
+        // RECEIVING MENU FROM SERVER
+        rbytes = recv(connectionSocket, rx, sizeof(rx), 0);
+        {
+            if (rbytes == -1)
+            {
+                printf("Error receiving menu from server.\n");
+                printf("Can not gurantee connection. Terminating client...\n");
+                close(connectionSocket);
+                return 0;
+            }
+            else if (rbytes == 0)
+            {
+                printf("Server has closed connection.\n");
+                close(connectionSocket);
+                return 0;
+            }
+            else
+            {
+                printf("%s\n", rx);
+            }
+        } 
 
         // PROMPTING USER TO ENTER CHOICE
         inAttempts = 0;
@@ -195,41 +195,41 @@ int main(int argc, char const *argv[])
         }        
 
         // SENDING CHOICE BACK TO SERVER
-        // sbytes = send(connectionSocket, tx, sizeof(tx),0);
-        // if (sbytes == -1)
-        // {
-        //     printf("Error sending choice to server. Terminating client ...\n");
-        //     close(connectionSocket);
-        //     return -1;
-        // }
+        sbytes = send(connectionSocket, tx, sizeof(tx),0);
+        if (sbytes == -1)
+        {
+            printf("Error sending choice to server. Terminating client ...\n");
+            close(connectionSocket);
+            return -1;
+        }
 
         // RECEIVING BENFIT INFORMATION FROM SERVER
-        // rbytes = recv(connectionSocket, rx, sizeof(rx), 0);
-        // {
-        //     if (rbytes == -1)
-        //     {
-        //         printf("Error receiving benefit information from server.\n");
-        //         printf("Can not gurantee connection. Terminating client...\n");
-        //         close(connectionSocket);
-        //         return 0;
-        //     }
-        //     else if (rbytes == 0)
-        //     {
-        //         printf("Server has shutdown.\n");
-        //         close(connectionSocket);
-        //         return 0;
-        //     }
-        //     else
-        //     {
-        //         printf("%s\n", rx);
-        //     }
-        // }
+        rbytes = recv(connectionSocket, rx, sizeof(rx), 0);
+        {
+            if (rbytes == -1)
+            {
+                printf("Error receiving benefit information from server.\n");
+                printf("Can not gurantee connection. Terminating client...\n");
+                close(connectionSocket);
+                return 0;
+            }
+            else if (rbytes == 0)
+            {
+                printf("Server has shutdown.\n");
+                close(connectionSocket);
+                return 0;
+            }
+            else
+            {
+                printf("\n%s\n\n", rx);
+            }
+        }
 
         // ASKING USER IF THEY NEED MORE INFORMATION
         inAttempts = 0;
         while (1)
         {
-            printf("\nDo you need any more information? (Yes = y, No = n): ");
+            printf("Do you need any more information? (Yes = y, No = n): ");
             if (fgets(tx, 100*sizeof(char), stdin) == NULL)
             {
                 inAttempts++;
@@ -265,13 +265,13 @@ int main(int argc, char const *argv[])
         }   
 
         // SENDING RESPONSE TO SERVER AND TERMINATING IF RESPONSE WAS 'n'
-        // sbytes = send(connectionSocket, tx, sizeof(tx),0);
-        // if (sbytes == -1)
-        // {
-        //     printf("Error sending choice to server. Terminating client ...\n");
-        //     close(connectionSocket);
-        //     return -1;
-        // }
+        sbytes = send(connectionSocket, tx, sizeof(tx),0);
+        if (sbytes == -1)
+        {
+            printf("Error sending choice to server. Terminating client ...\n");
+            close(connectionSocket);
+            return -1;
+        }
 
         if(tx[0] == 'n'){
             close(connectionSocket);
