@@ -3,6 +3,8 @@
         "pthread.h": "c",
         "unistd.h": "c",
         "string.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdio.h": "c",
+        "socket.h": "c"
     }
 }

@@ -105,11 +105,14 @@ int main(int argc, char const *argv[])
     int rbytes = SSL_read(ssl, RxBuffer, sizeof(RxBuffer));
     printf("Message: %s, # of bytes: %d\n", RxBuffer, rbytes);
 
-    SSL_shutdown(ssl);
-    SSL_free(ssl);
-    SSL_CTX_free(ctx);
+    int shdstatus = SSL_shutdown(ssl);
+    if(shdstatus == 0){
+        SSL_shutdown(ssl);
+    }
     close(clientSocket);
     close(serverSocket);
+    SSL_free(ssl);
+    SSL_CTX_free(ctx);
 
     return 0;
 }
